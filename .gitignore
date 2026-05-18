@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyc
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+.env
+
+# Some common data and model directories
+data/
+models/
+mlruns/
+.ipynb_checkpoints/
+.DS_Store
