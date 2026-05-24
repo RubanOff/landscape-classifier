@@ -1,0 +1,33 @@
+stages:
+  prepare_data:
+    cmd: dvc pull data.dvc
+
+  train:
+    cmd: uv run landscape-train
+    deps:
+      - data
+      - configs
+      - landscape_classifier
+    outs:
+      - models/best_resnet18.pt
+      - artifacts
+      - plots
+
+  export_onnx:
+    cmd: uv run landscape-export-onnx
+    deps:
+      - models/best_resnet18.pt
+      - configs
+      - landscape_classifier
+    outs:
+      - models/best_resnet18.onnx
+
+  prepare_triton_repo:
+    cmd: uv run landscape-prepare-triton
+    deps:
+      - models/best_resnet18.onnx
+      - configs
+      - landscape_classifier
+    outs:
+      - triton_model_repository/landscape_classifier/1/model.onnx
+      - triton_model_repository/landscape_classifier/config.pbtxt

@@ -1,0 +1,17 @@
+name: "landscape_classifier"
+backend: "onnxruntime"
+max_batch_size: 8
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [ 3, 150, 150 ]
+  }
+]
+output [
+  {
+    name: "logits"
+    data_type: TYPE_FP32
+    dims: [ 6 ]
+  }
+]

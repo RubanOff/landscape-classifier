@@ -1,0 +1,14 @@
+name: resnet18
+architecture: ResNet18
+registry_name: landscape-resnet18
+path: models/best_resnet18.pt
+image_size: 150
+num_classes: 6
+
+class_names:
+  - buildings
+  - forest
+  - glacier
+  - mountain
+  - sea
+  - street

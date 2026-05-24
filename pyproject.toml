@@ -1,24 +1,69 @@
 [project]
-name = "landscape-classifier-mlops"
+name = "landscape-classifier"
 version = "0.1.0"
-description = "Add your description here"
+description = "Landscape image classification with Lightning, Hydra, MLflow, DVC, ONNX, Triton and FastAPI"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "dvc>=3.67.1",
     "fastapi>=0.136.1",
+    "hydra-core>=1.3.2",
+    "lightning>=2.6.4",
     "matplotlib>=3.10.9",
-    "mlflow>=1.27.0",
-    "numpy>=2.4.5",
-    "pandas>=3.0.3",
+    "mlflow==2.9.2",
+    "numpy<2",
+    "onnx==1.18.0",
+    "onnxscript>=0.5.0",
+    "pandas<3",
     "pillow>=12.2.0",
+    "protobuf<5",
+    "python-multipart>=0.0.29",
+    "pyyaml>=6.0.3",
     "scikit-learn>=1.8.0",
+    "setuptools<81",
     "torch>=2.12.0",
+    "torchinfo>=1.8.0",
+    "torchmetrics>=1.9.0",
     "torchvision>=0.27.0",
+    "tritonclient[http]>=2.68.0",
     "uvicorn>=0.47.0",
 ]
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.6.0",
     "pytest>=9.0.3",
     "ruff>=0.15.13",
 ]
+
+[project.scripts]
+landscape-train = "landscape_classifier.commands:train_command"
+landscape-export-onnx = "landscape_classifier.commands:export_onnx_command"
+landscape-prepare-triton = "landscape_classifier.commands:prepare_triton_command"
+landscape-triton-predict = "landscape_classifier.commands:triton_predict_command"
+landscape-api = "landscape_classifier.commands:api_command"
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["landscape_classifier", "landscape_classifier.*"]

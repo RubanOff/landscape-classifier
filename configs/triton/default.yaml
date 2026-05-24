@@ -1,0 +1,6 @@
+model_name: landscape_classifier
+model_repository: triton_model_repository
+model_version: 1
+url: localhost:8001
+input_name: input
+output_name: logits

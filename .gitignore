@@ -1,19 +1,58 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
-*.pyc
+*.py[cod]
+*.so
+
+# Build
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 
 # Virtual environments
 .venv/
 .env
+.tmp/
 
-# Some common data and model directories
-data/
-models/
-mlruns/
+# Jupyter / macOS
 .ipynb_checkpoints/
 .DS_Store
+
+# Logs
+logs/
+*.log
+
+# Artifacts
+artifacts/
+checkpoints/
+mlartifacts/
+mlruns/
+mlflow.db
+outputs/
+plots/
+triton_model_repository/*/*/model.onnx
+
+# Data & models
+data/
+models/*
+!models/*.dvc
+
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# DVC
+.dvc/cache/
+
+# Ruff / pytest
+.ruff_cache/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+/data

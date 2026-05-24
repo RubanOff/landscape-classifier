@@ -1,0 +1,13 @@
+epochs: 1
+batch_size: 32
+learning_rate: 0.0001
+weight_decay: 0.0001
+optimizer: AdamW
+loss: CrossEntropyLoss
+accelerator: auto
+devices: 1
+precision: 32
+log_every_n_steps: 10
+deterministic: true
+checkpoint_monitor: val_weighted_f1
+checkpoint_mode: max
