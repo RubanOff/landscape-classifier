@@ -21,6 +21,7 @@ wheels/
 # Logs
 logs/
 *.log
+airflow/
 
 # Artifacts
 artifacts/
