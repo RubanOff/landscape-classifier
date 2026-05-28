@@ -1,0 +1,59 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: dvc pull data.dvc
+  train:
+    cmd: uv run landscape-train
+    deps:
+    - path: configs
+      hash: md5
+      md5: 24d4cee2c8ae4e98d64ca8bf49076ae4.dir
+      size: 7276
+      nfiles: 9
+    - path: data
+      hash: md5
+      md5: 95a2858d3041932727b6c7466efdf233.dir
+      size: 258283505
+      nfiles: 17038
+    - path: landscape_classifier
+      hash: md5
+      md5: 214318171d77ebcb220698839c1d1fac.dir
+      size: 143336
+      nfiles: 44
+    outs:
+    - path: artifacts
+      hash: md5
+      md5: 0f3f063ecb5a40aa6cd05cf3bf71b455.dir
+      size: 47532333
+      nfiles: 24
+    - path: models/best_resnet18.pt
+      hash: md5
+      md5: 9d9a87ef150a9281fd2d3179e5de0102
+      size: 44796619
+    - path: plots
+      hash: md5
+      md5: 306ac1b6cc734e664db13c8dbe239eb7.dir
+      size: 29725
+      nfiles: 1
+  export_onnx:
+    cmd: uv run landscape-export-onnx
+    deps:
+    - path: configs
+      hash: md5
+      md5: 24d4cee2c8ae4e98d64ca8bf49076ae4.dir
+      size: 7276
+      nfiles: 9
+    - path: landscape_classifier
+      hash: md5
+      md5: 214318171d77ebcb220698839c1d1fac.dir
+      size: 143336
+      nfiles: 44
+    - path: models/best_resnet18.pt
+      hash: md5
+      md5: 9d9a87ef150a9281fd2d3179e5de0102
+      size: 44796619
+    outs:
+    - path: models/best_resnet18.onnx
+      hash: md5
+      md5: 5547b40772b97b8f2d07b4d9c0535e49
+      size: 44708866

@@ -34,7 +34,7 @@ plots/
 triton_model_repository/*/*/model.onnx
 
 # Data & models
-data/
+/data/
 models/*
 !models/*.dvc
 
@@ -56,4 +56,3 @@ node_modules/
 # IDE
 .vscode/
 .idea/
-/data

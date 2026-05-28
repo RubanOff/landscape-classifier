@@ -1,0 +1,4 @@
+train_dir: data/seg_train/seg_train
+test_dir: data/seg_test/seg_test
+val_size: 0.15
+num_workers: 0
