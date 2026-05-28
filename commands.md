@@ -33,40 +33,6 @@ uv run dvc pull data.dvc
 uv run dvc repro
 ```
 
-## Airflow
-
-```bash
-docker compose up -d mlflow
-```
-
-```bash
-AIRFLOW_HOME="$PWD/airflow" \
-AIRFLOW__CORE__DAGS_FOLDER="$PWD/dags" \
-AIRFLOW__CORE__LOAD_EXAMPLES=false \
-AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true \
-uv run --with "apache-airflow==2.9.3" airflow standalone
-```
-
-Airflow UI:
-
-```text
-http://127.0.0.1:8081
-```
-
-Credentials:
-
-```text
-admin / admin
-```
-
-Trigger DAG from CLI:
-
-```bash
-AIRFLOW_HOME="$PWD/airflow" \
-AIRFLOW__CORE__DAGS_FOLDER="$PWD/dags" \
-uv run --with "apache-airflow==2.9.3" airflow dags trigger landscape_training_pipeline
-```
-
 ## Training
 
 ```bash
