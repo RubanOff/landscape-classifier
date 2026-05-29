@@ -58,9 +58,23 @@ class MetricHistoryCallback(pl.Callback):
             {
                 "epoch": trainer.current_epoch + 1,
                 "train_loss": _metric_value(metrics.get("train_loss")),
+                "train_accuracy": _metric_value(metrics.get("train_accuracy")),
+                "train_weighted_f1": _metric_value(metrics.get("train_weighted_f1")),
+                "train_weighted_precision": _metric_value(
+                    metrics.get("train_weighted_precision")
+                ),
+                "train_weighted_recall": _metric_value(
+                    metrics.get("train_weighted_recall")
+                ),
                 "val_loss": _metric_value(metrics.get("val_loss")),
                 "val_accuracy": _metric_value(metrics.get("val_accuracy")),
                 "val_weighted_f1": _metric_value(metrics.get("val_weighted_f1")),
+                "val_weighted_precision": _metric_value(
+                    metrics.get("val_weighted_precision")
+                ),
+                "val_weighted_recall": _metric_value(
+                    metrics.get("val_weighted_recall")
+                ),
             }
         )
 

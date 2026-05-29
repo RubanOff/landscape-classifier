@@ -32,6 +32,18 @@ class LandscapeClassifierModule(pl.LightningModule):
             num_classes=num_classes,
             average="weighted",
         )
+        self.train_weighted_f1 = MulticlassF1Score(
+            num_classes=num_classes,
+            average="weighted",
+        )
+        self.train_precision = MulticlassPrecision(
+            num_classes=num_classes,
+            average="weighted",
+        )
+        self.train_recall = MulticlassRecall(
+            num_classes=num_classes,
+            average="weighted",
+        )
         self.val_accuracy = MulticlassAccuracy(
             num_classes=num_classes,
             average="weighted",
@@ -41,6 +53,14 @@ class LandscapeClassifierModule(pl.LightningModule):
             average="weighted",
         )
         self.val_weighted_f1 = MulticlassF1Score(
+            num_classes=num_classes,
+            average="weighted",
+        )
+        self.val_precision = MulticlassPrecision(
+            num_classes=num_classes,
+            average="weighted",
+        )
+        self.val_recall = MulticlassRecall(
             num_classes=num_classes,
             average="weighted",
         )
@@ -67,6 +87,9 @@ class LandscapeClassifierModule(pl.LightningModule):
         predictions = logits.argmax(dim=1)
 
         self.train_accuracy.update(predictions, targets)
+        self.train_weighted_f1.update(predictions, targets)
+        self.train_precision.update(predictions, targets)
+        self.train_recall.update(predictions, targets)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log(
             "train_accuracy",
@@ -74,6 +97,24 @@ class LandscapeClassifierModule(pl.LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
+        )
+        self.log(
+            "train_weighted_f1",
+            self.train_weighted_f1,
+            on_step=False,
+            on_epoch=True,
+        )
+        self.log(
+            "train_weighted_precision",
+            self.train_precision,
+            on_step=False,
+            on_epoch=True,
+        )
+        self.log(
+            "train_weighted_recall",
+            self.train_recall,
+            on_step=False,
+            on_epoch=True,
         )
 
         return loss
@@ -86,6 +127,8 @@ class LandscapeClassifierModule(pl.LightningModule):
 
         self.val_accuracy.update(predictions, targets)
         self.val_weighted_f1.update(predictions, targets)
+        self.val_precision.update(predictions, targets)
+        self.val_recall.update(predictions, targets)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log(
             "val_accuracy",
@@ -93,6 +136,18 @@ class LandscapeClassifierModule(pl.LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
+        )
+        self.log(
+            "val_weighted_precision",
+            self.val_precision,
+            on_step=False,
+            on_epoch=True,
+        )
+        self.log(
+            "val_weighted_recall",
+            self.val_recall,
+            on_step=False,
+            on_epoch=True,
         )
         self.log(
             "val_weighted_f1",
