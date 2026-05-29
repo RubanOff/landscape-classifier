@@ -106,6 +106,12 @@ uv run landscape-train training.epochs=1 training.batch_size=32
 models:/landscape-resnet18@production
 ```
 
+Проверить, на какую версию модели указывает alias `production`:
+
+```bash
+uv run python -c "from mlflow import MlflowClient; c=MlflowClient('http://127.0.0.1:8080'); v=c.get_model_version_by_alias('landscape-resnet18', 'production'); print('name=', v.name); print('version=', v.version); print('run_id=', v.run_id); print('status=', v.status)"
+```
+
 Этот alias является источником production-версии. После переобучения нужно
 обновить Triton repository:
 
