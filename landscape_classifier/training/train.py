@@ -1,5 +1,9 @@
+import hashlib
+import json
+import os
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -9,6 +13,7 @@ import mlflow
 import mlflow.pytorch
 import torch
 import torch.nn as nn
+import yaml
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 from mlflow.tracking import MlflowClient
@@ -37,6 +42,7 @@ from landscape_classifier.training.lit_model import LandscapeClassifierModule
 from landscape_classifier.training.logger import get_logger
 
 logger = get_logger()
+PROJECT_ROOT = get_project_root()
 
 
 class MetricHistoryCallback(pl.Callback):
@@ -70,17 +76,185 @@ def _metric_value(metric) -> float:
 
 
 def get_git_commit_id() -> str:
+    return get_git_metadata()["commit_id"]
+
+
+def run_command(command: list[str]) -> str:
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+            command,
             check=True,
             capture_output=True,
             text=True,
+            cwd=PROJECT_ROOT,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         return "unknown"
 
     return result.stdout.strip()
+
+
+def run_dvc_command(command: list[str]) -> str:
+    return run_command([sys.executable, "-m", "dvc", *command])
+
+
+def get_git_metadata() -> dict[str, str]:
+    status = run_command(["git", "status", "--porcelain"])
+
+    return {
+        "commit_id": run_command(["git", "rev-parse", "HEAD"]),
+        "branch": run_command(["git", "branch", "--show-current"]),
+        "is_dirty": str(bool(status)),
+    }
+
+
+def get_file_sha256(path: str | Path) -> str:
+    path = Path(path)
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+
+    if not path.exists():
+        return "missing"
+
+    digest = hashlib.sha256()
+
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
+
+
+def get_dvc_dataset_metadata(dvc_file: str | Path = "data.dvc") -> dict[str, str]:
+    dvc_file = Path(dvc_file)
+    if not dvc_file.is_absolute():
+        dvc_file = PROJECT_ROOT / dvc_file
+
+    if not dvc_file.exists():
+        return {
+            "dvc_data_path": "missing",
+            "dvc_data_md5": "missing",
+            "dvc_data_size": "missing",
+            "dvc_data_nfiles": "missing",
+            "dvc_remote": run_dvc_command(["remote", "default"]),
+        }
+
+    with dvc_file.open(encoding="utf-8") as file:
+        data = yaml.safe_load(file)
+
+    output = data["outs"][0]
+    remote = run_dvc_command(["remote", "default"])
+
+    if remote == "unknown":
+        remote = "data-storage"
+
+    remote_url = run_dvc_command(["config", f"remote.{remote}.url"])
+
+    return {
+        "dvc_data_path": str(output.get("path", "")),
+        "dvc_data_md5": str(output.get("md5", "")),
+        "dvc_data_hash": str(output.get("hash", "")),
+        "dvc_data_size": str(output.get("size", "")),
+        "dvc_data_nfiles": str(output.get("nfiles", "")),
+        "dvc_remote": remote,
+        "dvc_remote_url": remote_url,
+    }
+
+
+def get_docker_metadata() -> dict[str, str]:
+    image_name = os.getenv(
+        "LANDSCAPE_API_IMAGE",
+        "landscape-classifier-mlops-api",
+    )
+    image_id = run_command(
+        [
+            "docker",
+            "image",
+            "inspect",
+            image_name,
+            "--format",
+            "{{.Id}}",
+        ]
+    )
+
+    return {
+        "docker_image_name": image_name,
+        "docker_image_id": image_id,
+        "dockerfile_api_sha256": get_file_sha256("Dockerfile.api"),
+        "docker_compose_sha256": get_file_sha256("docker-compose.yml"),
+    }
+
+
+def flatten_config(cfg: DictConfig) -> dict[str, str | int | float | bool]:
+    container = OmegaConf.to_container(cfg, resolve=True)
+    flattened: dict[str, str | int | float | bool] = {}
+
+    def visit(prefix: str, value) -> None:
+        if isinstance(value, dict):
+            for key, child_value in value.items():
+                next_prefix = f"{prefix}.{key}" if prefix else str(key)
+                visit(next_prefix, child_value)
+            return
+
+        if isinstance(value, list):
+            flattened[prefix] = ",".join(str(item) for item in value)
+            return
+
+        if value is None:
+            flattened[prefix] = "null"
+            return
+
+        flattened[prefix] = value
+
+    visit("", container)
+    return flattened
+
+
+def save_run_metadata(
+    output_path: Path,
+    cfg: DictConfig,
+    git_metadata: dict[str, str],
+    dvc_metadata: dict[str, str],
+    docker_metadata: dict[str, str],
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    metadata = {
+        "git": git_metadata,
+        "dvc": dvc_metadata,
+        "docker": docker_metadata,
+        "hydra_config": OmegaConf.to_container(cfg, resolve=True),
+    }
+
+    with output_path.open("w", encoding="utf-8") as file:
+        json.dump(metadata, file, indent=4, ensure_ascii=False)
+
+
+def log_mlflow_metadata(
+    cfg: DictConfig,
+    git_metadata: dict[str, str],
+    dvc_metadata: dict[str, str],
+    docker_metadata: dict[str, str],
+) -> None:
+    mlflow.set_tags(
+        {
+            "git.commit": git_metadata["commit_id"],
+            "git.branch": git_metadata["branch"],
+            "git.is_dirty": git_metadata["is_dirty"],
+            "docker.image": docker_metadata["docker_image_name"],
+            "dvc.data_md5": dvc_metadata["dvc_data_md5"],
+            "model.name": cfg.model.name,
+            "model.registry_name": cfg.model.registry_name,
+        }
+    )
+    mlflow.log_params(
+        {
+            **{f"cfg.{key}": value for key, value in flatten_config(cfg).items()},
+            **git_metadata,
+            **dvc_metadata,
+            **docker_metadata,
+        }
+    )
 
 
 def set_model_alias(
@@ -179,6 +353,9 @@ def train(cfg: DictConfig) -> None:
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     run_name = f"{cfg.model.name}_{timestamp}"
+    git_metadata = get_git_metadata()
+    dvc_metadata = get_dvc_dataset_metadata()
+    docker_metadata = get_docker_metadata()
 
     mlflow_logger = MLFlowLogger(
         experiment_name=cfg.mlflow.experiment_name,
@@ -200,7 +377,14 @@ def train(cfg: DictConfig) -> None:
             "val_size": cfg.data.val_size,
             "num_workers": cfg.data.num_workers,
             "seed": cfg.seed,
-            "git_commit_id": get_git_commit_id(),
+            "git_commit_id": git_metadata["commit_id"],
+            "git_branch": git_metadata["branch"],
+            "git_is_dirty": git_metadata["is_dirty"],
+            "dvc_data_md5": dvc_metadata["dvc_data_md5"],
+            "dvc_data_nfiles": dvc_metadata["dvc_data_nfiles"],
+            "dvc_remote": dvc_metadata["dvc_remote"],
+            "docker_image_name": docker_metadata["docker_image_name"],
+            "docker_image_id": docker_metadata["docker_image_id"],
         }
     )
 
@@ -278,6 +462,13 @@ def train(cfg: DictConfig) -> None:
     save_resolved_config(
         cfg,
         artifacts_dir / "resolved_config.yaml",
+    )
+    save_run_metadata(
+        artifacts_dir / "metadata" / "run_metadata.json",
+        cfg=cfg,
+        git_metadata=git_metadata,
+        dvc_metadata=dvc_metadata,
+        docker_metadata=docker_metadata,
     )
 
     sample_report_dir = artifacts_dir / "sample_report"
@@ -410,6 +601,12 @@ def train(cfg: DictConfig) -> None:
 
     run_id = mlflow_logger.run_id
     with mlflow.start_run(run_id=run_id):
+        log_mlflow_metadata(
+            cfg=cfg,
+            git_metadata=git_metadata,
+            dvc_metadata=dvc_metadata,
+            docker_metadata=docker_metadata,
+        )
         mlflow.log_metrics(
             {
                 "test_loss": test_metrics["loss"],
@@ -428,6 +625,15 @@ def train(cfg: DictConfig) -> None:
         mlflow.log_artifacts(
             local_dir=str(plots_dir),
             artifact_path="plots",
+        )
+        if best_checkpoint_path:
+            mlflow.log_artifact(
+                local_path=best_checkpoint_path,
+                artifact_path="checkpoints",
+            )
+        mlflow.log_artifact(
+            local_path=str(model_path),
+            artifact_path="model_state_dict",
         )
         mlflow.pytorch.log_model(
             pytorch_model=best_model.model,
