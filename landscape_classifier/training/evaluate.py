@@ -13,6 +13,7 @@ from sklearn.metrics import (
 
 @torch.no_grad()
 def evaluate(model, loader, criterion, device):
+    """Evaluate a model on a dataloader."""
     model.eval()
 
     total_loss = 0
@@ -88,6 +89,7 @@ def evaluate(model, loader, criterion, device):
 
 
 def get_classification_report(y_true, y_pred, class_names):
+    """Build a classification report."""
     return classification_report(
         y_true,
         y_pred,
@@ -98,4 +100,5 @@ def get_classification_report(y_true, y_pred, class_names):
 
 
 def get_confusion_matrix(y_true, y_pred):
+    """Build a confusion matrix."""
     return confusion_matrix(y_true, y_pred)

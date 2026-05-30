@@ -8,6 +8,7 @@ from landscape_classifier.training.dataset import LandscapeDataModule
 
 
 def create_image_dataset(root: Path, classes: list[str], images_per_class: int = 2):
+    """Create a tiny image dataset."""
     for class_name in classes:
         class_dir = root / class_name
         class_dir.mkdir(parents=True)
@@ -21,6 +22,7 @@ def create_image_dataset(root: Path, classes: list[str], images_per_class: int =
 
 
 def test_datamodule_uses_configurable_split_and_batch_size(tmp_path):
+    """Check datamodule split and batch size."""
     classes = ["forest", "sea"]
     train_dir = tmp_path / "train"
     test_dir = tmp_path / "test"
@@ -47,6 +49,7 @@ def test_datamodule_uses_configurable_split_and_batch_size(tmp_path):
 
 
 def test_predict_transform_uses_configured_image_size():
+    """Check prediction image resizing."""
     transform = build_predict_transform(32)
     image = Image.new("RGB", (16, 16), color=(10, 20, 30))
 
@@ -56,6 +59,7 @@ def test_predict_transform_uses_configured_image_size():
 
 
 def test_health_does_not_load_model():
+    """Check health endpoint laziness."""
     assert health() == {
         "status": "ok",
         "model_loaded": False,

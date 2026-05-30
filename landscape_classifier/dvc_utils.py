@@ -7,6 +7,7 @@ logger = get_logger("landscape-dvc")
 
 
 def ensure_dvc_paths(paths: list[str | Path]) -> None:
+    """Pull missing DVC-managed paths."""
     missing_paths = [Path(path) for path in paths if not Path(path).exists()]
 
     if not missing_paths:

@@ -2,6 +2,7 @@ from torchvision import transforms
 
 
 def build_predict_transform(image_size: int):
+    """Build inference image transforms."""
     return transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),

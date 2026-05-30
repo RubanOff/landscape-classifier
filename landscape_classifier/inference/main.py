@@ -18,6 +18,7 @@ _predictor: Predictor | None = None
 
 
 def get_predictor() -> Predictor:
+    """Return the cached predictor."""
     global _predictor
 
     if _predictor is None:
@@ -28,6 +29,7 @@ def get_predictor() -> Predictor:
 
 @app.get("/ui", response_class=HTMLResponse)
 def ui():
+    """Render the upload UI."""
     return """
     <!DOCTYPE html>
     <html>
@@ -143,11 +145,13 @@ def ui():
 
 @app.get("/")
 def root():
+    """Return the API root message."""
     return {"message": "Landscape Classification API"}
 
 
 @app.get("/health")
 def health():
+    """Return API health status."""
     return {
         "status": "ok",
         "model_loaded": _predictor is not None,
@@ -159,6 +163,7 @@ def health():
     response_model=PredictionResponse,
 )
 async def predict(file: UploadFile = File(...)):
+    """Classify an uploaded image."""
     contents = await file.read()
 
     try:
@@ -181,6 +186,7 @@ async def predict(file: UploadFile = File(...)):
 
 
 def run():
+    """Run the API with Uvicorn."""
     import uvicorn
 
     cfg = load_config()

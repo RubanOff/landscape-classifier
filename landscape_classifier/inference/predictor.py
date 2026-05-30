@@ -11,6 +11,7 @@ logger = get_logger("landscape-inference")
 
 
 def _softmax(logits: np.ndarray) -> np.ndarray:
+    """Convert logits to probabilities."""
     shifted_logits = logits - np.max(logits, axis=1, keepdims=True)
     exp_logits = np.exp(shifted_logits)
     return exp_logits / np.sum(exp_logits, axis=1, keepdims=True)
@@ -18,6 +19,7 @@ def _softmax(logits: np.ndarray) -> np.ndarray:
 
 class Predictor:
     def __init__(self, cfg=None):
+        """Initialize Triton predictor state."""
         import tritonclient.http as httpclient
 
         self.cfg = cfg or load_config()
@@ -37,6 +39,7 @@ class Predictor:
         )
 
     def predict(self, image: Image.Image):
+        """Predict a class for one image."""
         import tritonclient.http as httpclient
         from tritonclient.utils import np_to_triton_dtype
 

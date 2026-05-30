@@ -9,6 +9,7 @@ from torchinfo import summary
 
 
 def get_pyplot():
+    """Load pyplot in headless mode."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -19,6 +20,7 @@ def get_pyplot():
 
 
 def save_class_distribution(dataset, class_names, output_dir):
+    """Save class distribution artifacts."""
     plt = get_pyplot()
 
     output_dir = Path(output_dir)
@@ -81,6 +83,7 @@ def save_class_distribution(dataset, class_names, output_dir):
 
 
 def save_model_info(output_dir, model_name, class_names, image_size, metrics):
+    """Save model metadata as JSON."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -106,6 +109,7 @@ def save_model_tester_artifacts(
     classification_report_dict,
     confusion_matrix_array,
 ):
+    """Save evaluation reports and matrix."""
     plt = get_pyplot()
 
     from sklearn.metrics import ConfusionMatrixDisplay
@@ -165,6 +169,7 @@ def save_model_tester_artifacts(
 
 
 def denormalize_image(image):
+    """Convert normalized tensor to image."""
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
 
@@ -176,6 +181,7 @@ def denormalize_image(image):
 
 
 def save_sample_images(loader, class_names, output_path, n_images=9):
+    """Save a grid of sample images."""
     plt = get_pyplot()
 
     output_path = Path(output_path)
@@ -212,6 +218,7 @@ def save_dataset_stats(
     class_names,
     image_size,
 ):
+    """Save dataset summary stats."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -231,6 +238,7 @@ def save_dataset_stats(
 
 
 def save_class_balance(dataset, class_names, output_path):
+    """Save class balance as CSV."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -260,6 +268,7 @@ def save_class_balance(dataset, class_names, output_path):
 
 
 def save_training_curves(history, output_path):
+    """Save training metric curves."""
     plt = get_pyplot()
 
     output_path = Path(output_path)
@@ -290,6 +299,7 @@ def save_training_curves(history, output_path):
 
 
 def save_model_summary(model, output_path, image_size):
+    """Save a text model summary."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -312,6 +322,7 @@ def save_misclassified_examples(
     output_path,
     max_images=9,
 ):
+    """Save misclassified test examples."""
     plt = get_pyplot()
 
     output_path = Path(output_path)

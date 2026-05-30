@@ -14,12 +14,14 @@ logger = get_logger("landscape-triton")
 
 
 def prepare_triton_repository_command() -> None:
+    """Prepare Triton files from the CLI."""
     cfg = load_config()
     onnx_path = export_production_model_to_onnx(cfg)
     prepare_triton_repository(cfg, onnx_path)
 
 
 def prepare_triton_repository(cfg, onnx_path: Path) -> Path:
+    """Create a Triton model repository."""
     model_dir = (
         Path(cfg.triton.model_repository)
         / cfg.triton.model_name
@@ -65,6 +67,7 @@ def prepare_triton_repository(cfg, onnx_path: Path) -> Path:
 
 
 def predict_with_triton(image_path: str | Path):
+    """Run one image through Triton."""
     import tritonclient.http as httpclient
     from tritonclient.utils import np_to_triton_dtype
 
@@ -104,6 +107,7 @@ def predict_with_triton(image_path: str | Path):
 
 
 def triton_predict_command() -> None:
+    """Run Triton prediction from the CLI."""
     import sys
 
     if len(sys.argv) < 2:

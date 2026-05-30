@@ -47,9 +47,11 @@ PROJECT_ROOT = get_project_root()
 
 class MetricHistoryCallback(pl.Callback):
     def __init__(self):
+        """Store epoch-level metrics."""
         self.history: list[dict[str, float]] = []
 
     def on_validation_epoch_end(self, trainer, pl_module):
+        """Collect metrics after validation."""
         if trainer.sanity_checking:
             return
 
@@ -80,6 +82,7 @@ class MetricHistoryCallback(pl.Callback):
 
 
 def _metric_value(metric) -> float:
+    """Convert metric objects to floats."""
     if metric is None:
         return 0.0
 
@@ -90,10 +93,12 @@ def _metric_value(metric) -> float:
 
 
 def get_git_commit_id() -> str:
+    """Return the current git commit."""
     return get_git_metadata()["commit_id"]
 
 
 def run_command(command: list[str]) -> str:
+    """Run a command and return stdout."""
     try:
         result = subprocess.run(
             command,
@@ -109,10 +114,12 @@ def run_command(command: list[str]) -> str:
 
 
 def run_dvc_command(command: list[str]) -> str:
+    """Run a DVC command via Python."""
     return run_command([sys.executable, "-m", "dvc", *command])
 
 
 def get_git_metadata() -> dict[str, str]:
+    """Collect git metadata."""
     status = run_command(["git", "status", "--porcelain"])
 
     return {
@@ -123,6 +130,7 @@ def get_git_metadata() -> dict[str, str]:
 
 
 def get_file_sha256(path: str | Path) -> str:
+    """Calculate a file SHA256 hash."""
     path = Path(path)
     if not path.is_absolute():
         path = PROJECT_ROOT / path
@@ -140,6 +148,7 @@ def get_file_sha256(path: str | Path) -> str:
 
 
 def get_dvc_dataset_metadata(dvc_file: str | Path = "data.dvc") -> dict[str, str]:
+    """Read dataset metadata from DVC."""
     dvc_file = Path(dvc_file)
     if not dvc_file.is_absolute():
         dvc_file = PROJECT_ROOT / dvc_file
@@ -176,6 +185,7 @@ def get_dvc_dataset_metadata(dvc_file: str | Path = "data.dvc") -> dict[str, str
 
 
 def get_docker_metadata() -> dict[str, str]:
+    """Collect Docker image metadata."""
     image_name = os.getenv(
         "LANDSCAPE_API_IMAGE",
         "landscape-classifier-mlops-api",
@@ -200,10 +210,12 @@ def get_docker_metadata() -> dict[str, str]:
 
 
 def flatten_config(cfg: DictConfig) -> dict[str, str | int | float | bool]:
+    """Flatten Hydra config values."""
     container = OmegaConf.to_container(cfg, resolve=True)
     flattened: dict[str, str | int | float | bool] = {}
 
     def visit(prefix: str, value) -> None:
+        """Visit nested config values."""
         if isinstance(value, dict):
             for key, child_value in value.items():
                 next_prefix = f"{prefix}.{key}" if prefix else str(key)
@@ -231,6 +243,7 @@ def save_run_metadata(
     dvc_metadata: dict[str, str],
     docker_metadata: dict[str, str],
 ) -> None:
+    """Save run metadata to JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     metadata = {
@@ -250,6 +263,7 @@ def log_mlflow_metadata(
     dvc_metadata: dict[str, str],
     docker_metadata: dict[str, str],
 ) -> None:
+    """Log metadata to MLflow."""
     mlflow.set_tags(
         {
             "git.commit": git_metadata["commit_id"],
@@ -277,6 +291,7 @@ def set_model_alias(
     production_alias: str,
     run_id: str,
 ) -> None:
+    """Point an MLflow alias to this run."""
     model_versions = client.search_model_versions(f"name='{registered_model_name}'")
     current_run_versions = [
         model_version
@@ -314,6 +329,7 @@ def build_trainer(
     checkpoint_callback: ModelCheckpoint,
     history_callback: MetricHistoryCallback,
 ) -> pl.Trainer:
+    """Build the Lightning trainer."""
     return pl.Trainer(
         max_epochs=cfg.training.epochs,
         accelerator=cfg.training.accelerator,
@@ -336,6 +352,7 @@ def build_trainer(
     config_name="config",
 )
 def train(cfg: DictConfig) -> None:
+    """Run the full training pipeline."""
     logger.info("Starting Lightning training pipeline")
     logger.info("Loaded Hydra config:")
     logger.info(OmegaConf.to_yaml(cfg, resolve=True))

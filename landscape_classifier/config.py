@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 
 
 def get_project_root() -> Path:
+    """Find the repository root."""
     cwd = Path.cwd()
     if (cwd / "configs").is_dir() and (cwd / "landscape_classifier").is_dir():
         return cwd
@@ -13,6 +14,7 @@ def get_project_root() -> Path:
 
 
 def load_config(config_name: str = "config") -> DictConfig:
+    """Load a Hydra config."""
     config_dir = get_project_root() / "configs"
 
     with initialize_config_dir(

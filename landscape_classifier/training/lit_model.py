@@ -19,6 +19,7 @@ class LandscapeClassifierModule(pl.LightningModule):
         weight_decay: float,
         pretrained: bool = True,
     ):
+        """Initialize the Lightning classifier."""
         super().__init__()
         self.save_hyperparameters()
 
@@ -78,9 +79,11 @@ class LandscapeClassifierModule(pl.LightningModule):
         )
 
     def forward(self, images):
+        """Run the model forward pass."""
         return self.model(images)
 
     def training_step(self, batch, batch_idx):
+        """Run one training batch."""
         images, targets = batch
         logits = self(images)
         loss = self.criterion(logits, targets)
@@ -120,6 +123,7 @@ class LandscapeClassifierModule(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        """Run one validation batch."""
         images, targets = batch
         logits = self(images)
         loss = self.criterion(logits, targets)
@@ -158,6 +162,7 @@ class LandscapeClassifierModule(pl.LightningModule):
         )
 
     def test_step(self, batch, batch_idx):
+        """Run one test batch."""
         images, targets = batch
         logits = self(images)
         loss = self.criterion(logits, targets)
@@ -189,6 +194,7 @@ class LandscapeClassifierModule(pl.LightningModule):
         )
 
     def configure_optimizers(self):
+        """Create the optimizer."""
         return torch.optim.AdamW(
             self.parameters(),
             lr=self.hparams.learning_rate,

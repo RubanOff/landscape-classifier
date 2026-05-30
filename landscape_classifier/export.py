@@ -19,6 +19,7 @@ def export_model_to_onnx(
     cfg: DictConfig,
     onnx_path: Path,
 ) -> Path:
+    """Export a PyTorch model to ONNX."""
     onnx_path = Path(onnx_path)
     onnx_path.parent.mkdir(parents=True, exist_ok=True)
     model.eval()
@@ -55,6 +56,7 @@ def export_model_to_onnx(
 
 
 def export_onnx_from_config(cfg: DictConfig) -> Path:
+    """Export local model weights to ONNX."""
     model_path = Path(cfg.model.path)
 
     ensure_dvc_paths([model_path])
@@ -78,6 +80,7 @@ def export_onnx_from_config(cfg: DictConfig) -> Path:
 
 
 def export_production_model_to_onnx(cfg: DictConfig) -> Path:
+    """Export the MLflow production model to ONNX."""
     mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
     model_uri = f"models:/{cfg.model.registry_name}@{cfg.inference.production_alias}"
     logger.info(f"Loading production model from MLflow Registry: {model_uri}")
@@ -95,6 +98,7 @@ def export_production_model_to_onnx(cfg: DictConfig) -> Path:
 
 
 def export_onnx_command() -> None:
+    """Run ONNX export from the CLI."""
     cfg = load_config()
     export_production_model_to_onnx(cfg)
 
@@ -105,6 +109,7 @@ def export_onnx_command() -> None:
     config_name="config",
 )
 def export_onnx(cfg: DictConfig) -> None:
+    """Run ONNX export with Hydra."""
     export_production_model_to_onnx(cfg)
 
 

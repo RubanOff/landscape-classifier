@@ -2,6 +2,7 @@ from landscape_classifier.config import load_config
 
 
 def test_hydra_config_composes():
+    """Check that Hydra config loads."""
     cfg = load_config()
 
     assert cfg.model.image_size == 150

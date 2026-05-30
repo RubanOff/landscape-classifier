@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 def get_logger(name: str = "landscape-training") -> logging.Logger:
+    """Create a project logger."""
     logger = logging.getLogger(name)
 
     if logger.handlers:

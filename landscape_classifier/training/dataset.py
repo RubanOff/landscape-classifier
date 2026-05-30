@@ -9,6 +9,7 @@ from landscape_classifier.dvc_utils import ensure_dvc_paths
 
 
 def build_train_transform(image_size: int):
+    """Build training image transforms."""
     return transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -24,6 +25,7 @@ def build_train_transform(image_size: int):
 
 
 def build_eval_transform(image_size: int):
+    """Build evaluation image transforms."""
     return transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -37,6 +39,7 @@ def build_eval_transform(image_size: int):
 
 
 def split_indices(dataset_size: int, val_size: float, seed: int):
+    """Split dataset indices into train and val."""
     val_count = int(dataset_size * val_size)
     train_count = dataset_size - val_count
 
@@ -60,6 +63,7 @@ class LandscapeDataModule(pl.LightningDataModule):
         num_workers: int,
         pull_with_dvc: bool = True,
     ):
+        """Store datamodule settings."""
         super().__init__()
         self.train_dir = Path(train_dir)
         self.test_dir = Path(test_dir)
@@ -72,10 +76,12 @@ class LandscapeDataModule(pl.LightningDataModule):
         self.class_names: list[str] = []
 
     def prepare_data(self) -> None:
+        """Pull data before setup."""
         if self.pull_with_dvc:
             ensure_dvc_paths([self.train_dir, self.test_dir])
 
     def setup(self, stage: str | None = None) -> None:
+        """Create train, val, and test datasets."""
         train_source = datasets.ImageFolder(
             self.train_dir,
             transform=build_train_transform(self.image_size),
@@ -100,6 +106,7 @@ class LandscapeDataModule(pl.LightningDataModule):
         self.class_names = train_source.classes
 
     def train_dataloader(self):
+        """Return the training dataloader."""
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -109,6 +116,7 @@ class LandscapeDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
+        """Return the validation dataloader."""
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -118,6 +126,7 @@ class LandscapeDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self):
+        """Return the test dataloader."""
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
@@ -128,6 +137,7 @@ class LandscapeDataModule(pl.LightningDataModule):
 
 
 def build_datamodule(cfg) -> LandscapeDataModule:
+    """Build datamodule from config."""
     return LandscapeDataModule(
         train_dir=cfg.data.train_dir,
         test_dir=cfg.data.test_dir,
@@ -148,6 +158,7 @@ def get_dataloaders(
     seed: int,
     num_workers: int,
 ):
+    """Build dataloaders directly."""
     datamodule = LandscapeDataModule(
         train_dir=train_dir,
         test_dir=test_dir,

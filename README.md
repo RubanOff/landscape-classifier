@@ -10,6 +10,11 @@
 В проекте используется датасет Intel Image Classification, ResNet18, PyTorch
 Lightning, Hydra, MLflow, DVC, ONNX и Triton Inference Server.
 
+Основной production flow:
+
+data -> training -> MLflow Registry -> production alias
+-> ONNX export -> Triton model repository -> Triton server -> FastAPI
+
 ## Цель проекта
 
 Модель может использоваться для сортировки медиа, визуального поиска,
